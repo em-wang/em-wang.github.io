@@ -1,5 +1,5 @@
 /*
-	Twenty by HTML5 UP
+	Highlights by HTML5 UP
 	html5up.net | @n33co
 	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
@@ -7,111 +7,212 @@
 (function($) {
 
 	skel.breakpoints({
-		wide: '(max-width: 1680px)',
-		normal: '(max-width: 1280px)',
-		narrow: '(max-width: 980px)',
-		narrower: '(max-width: 840px)',
-		mobile: '(max-width: 736px)'
+		large: '(max-width: 1680px)',
+		medium: '(max-width: 980px)',
+		small: '(max-width: 736px)',
+		xsmall: '(max-width: 480px)'
 	});
 
 	$(function() {
 
 		var	$window = $(window),
 			$body = $('body'),
-			$header = $('#header'),
-			$banner = $('#banner');
+			$html = $('html');
 
 		// Disable animations/transitions until the page has loaded.
-			$body.addClass('is-loading');
+			$html.addClass('is-loading');
 
 			$window.on('load', function() {
-				$body.removeClass('is-loading');
+				window.setTimeout(function() {
+					$html.removeClass('is-loading');
+				}, 0);
 			});
 
-		// CSS polyfills (IE<9).
-			if (skel.vars.IEVersion < 9)
-				$(':last-child').addClass('last-child');
+		// Touch mode.
+			if (skel.vars.mobile) {
+
+				var $wrapper;
+
+				// Create wrapper.
+					$body.wrapInner('<div id="wrapper" />');
+					$wrapper = $('#wrapper');
+
+					// Hack: iOS vh bug.
+						if (skel.vars.os == 'ios')
+							$wrapper
+								.css('margin-top', -25)
+								.css('padding-bottom', 25);
+
+					// Pass scroll event to window.
+						$wrapper.on('scroll', function() {
+							$window.trigger('scroll');
+						});
+
+				// Scrolly.
+					$window.on('load.hl_scrolly', function() {
+
+						$('.scrolly').scrolly({
+							speed: 1500,
+							parent: $wrapper,
+							pollOnce: true
+						});
+
+						$window.off('load.hl_scrolly');
+
+					});
+
+				// Enable touch mode.
+					$html.addClass('is-touch');
+
+			}
+			else {
+
+				// Scrolly.
+					$('.scrolly').scrolly({
+						speed: 1500
+					});
+
+			}
 
 		// Fix: Placeholder polyfill.
 			$('form').placeholder();
 
-		// Prioritize "important" elements on narrower.
-			skel.on('+narrower -narrower', function() {
+		// Prioritize "important" elements on medium.
+			skel.on('+medium -medium', function() {
 				$.prioritize(
-					'.important\\28 narrower\\29',
-					skel.breakpoint('narrower').active
+					'.important\\28 medium\\29',
+					skel.breakpoint('medium').active
 				);
 			});
 
-		// Scrolly links.
-			$('.scrolly').scrolly({
-				speed: 1000,
-				offset: -10
-			});
-
-		// Dropdowns.
-			$('#nav > ul').dropotron({
-				mode: 'fade',
-				noOpenerFade: true,
-				expandMode: (skel.vars.touch ? 'click' : 'hover')
-			});
-
-		// Off-Canvas Navigation.
-
-			// Navigation Button.
-				$(
-					'<div id="navButton">' +
-						'<a href="#navPanel" class="toggle"></a>' +
-					'</div>'
-				)
-					.appendTo($body);
-
-			// Navigation Panel.
-				$(
-					'<div id="navPanel">' +
-						'<nav>' +
-							$('#nav').navList() +
-						'</nav>' +
-					'</div>'
-				)
-					.appendTo($body)
-					.panel({
-						delay: 500,
-						hideOnClick: true,
-						hideOnSwipe: true,
-						resetScroll: true,
-						resetForms: true,
-						side: 'left',
-						target: $body,
-						visibleClass: 'navPanel-visible'
-					});
-
-			// Fix: Remove navPanel transitions on WP<10 (poor/buggy performance).
-				if (skel.vars.os == 'wp' && skel.vars.osVersion < 10)
-					$('#navButton, #navPanel, #page-wrapper')
-						.css('transition', 'none');
-
 		// Header.
-		// If the header is using "alt" styling and #banner is present, use scrollwatch
-		// to revert it back to normal styling once the user scrolls past the banner.
-		// Note: This is disabled on mobile devices.
-			if (!skel.vars.mobile
-			&&	$header.hasClass('alt')
-			&&	$banner.length > 0) {
+			var $header = $('#header'),
+				$headerTitle = $header.find('header'),
+				$headerContainer = $header.find('.container');
 
-				$window.on('load', function() {
+			// Make title fixed.
+				if (!skel.vars.mobile) {
 
-					$banner.scrollwatch({
-						delay:		0,
-						range:		1,
-						anchor:		'top',
-						on:			function() { $header.addClass('alt reveal'); },
-						off:		function() { $header.removeClass('alt'); }
+					$window.on('load.hl_headerTitle', function() {
+
+						skel.on('-medium !medium', function() {
+
+							$headerTitle
+								.css('position', 'fixed')
+								.css('height', 'auto')
+								.css('top', '50%')
+								.css('left', '0')
+								.css('width', '100%')
+								.css('margin-top', ($headerTitle.outerHeight() / -2));
+
+						});
+
+						skel.on('+medium', function() {
+
+							$headerTitle
+								.css('position', '')
+								.css('height', '')
+								.css('top', '')
+								.css('left', '')
+								.css('width', '')
+								.css('margin-top', '');
+
+						});
+
+						$window.off('load.hl_headerTitle');
+
 					});
+
+				}
+
+			// Scrollex.
+				skel.on('-small !small', function() {
+					$header.scrollex({
+						terminate: function() {
+
+							$headerTitle.css('opacity', '');
+
+						},
+						scroll: function(progress) {
+
+							// Fade out title as user scrolls down.
+								if (progress > 0.5)
+									x = 1 - progress;
+								else
+									x = progress;
+
+								$headerTitle.css('opacity', Math.max(0, Math.min(1, x * 2)));
+
+						}
+					});
+				});
+
+				skel.on('+small', function() {
+
+					$header.unscrollex();
 
 				});
 
-			}
+		// Main sections.
+			$('.main').each(function() {
+
+				var $this = $(this),
+					$primaryImg = $this.find('.image.primary > img'),
+					$bg,
+					options;
+
+				// No primary image? Bail.
+					if ($primaryImg.length == 0)
+						return;
+
+				// Hack: IE8 fallback.
+					if (skel.vars.IEVersion < 9) {
+
+						$this
+							.css('background-image', 'url("' + $primaryImg.attr('src') + '")')
+							.css('-ms-behavior', 'url("css/ie/backgroundsize.min.htc")');
+
+						return;
+
+					}
+
+				// Create bg and append it to body.
+					$bg = $('<div class="main-bg" id="' + $this.attr('id') + '-bg"></div>')
+						.css('background-image', (
+							'url("css/images/overlay.png"), url("' + $primaryImg.attr('src') + '")'
+						))
+						.appendTo($body);
+
+				// Scrollex.
+					options = {
+						mode: 'middle',
+						delay: 200,
+						top: '-10vh',
+						bottom: '-10vh'
+					};
+
+					if (skel.canUse('transition')) {
+
+						options.init = function() { $bg.removeClass('active'); };
+						options.enter = function() { $bg.addClass('active'); };
+						options.leave = function() { $bg.removeClass('active'); };
+
+					}
+					else {
+
+						$bg
+							.css('opacity', 1)
+							.hide();
+
+						options.init = function() { $bg.fadeOut(0); };
+						options.enter = function() { $bg.fadeIn(400); };
+						options.leave = function() { $bg.fadeOut(400); };
+
+					}
+
+					$this.scrollex(options);
+
+			});
 
 	});
 
